@@ -10,6 +10,14 @@ then move on. Never print secret values back to the user; refer to vars by name 
 
 Preconditions: a SELISE Blocks OS portal account. No token needed — this flow produces the first one.
 
+> **If you are an automated agent (Claude/CI) that doesn't yet know which project to work
+> against**, do **not** start at step 1. The first login for an agent is the agent-only
+> `POST https://api.seliseblocks.com/iam/v4/auth-login` endpoint (PascalCase body, no
+> `x-blocks-key`), used to enumerate the projects/tenants the operator account can access. Full
+> details in [SKILL.md → Agent-only login](../SKILL.md#agent-only-login--enumerating-projects)
+> and [project-impersonation.md](project-impersonation.md). The steps below are for end-user /
+> application flows and use the standard OIDC/SSO login from `blocks-iam`.
+
 ## Steps
 
 ### 1. OS portal prerequisites (no API — portal UI, user does this)
@@ -60,14 +68,14 @@ re-check.
 `http://localhost` dev servers fail in confusing ways. One-time setup:
 [local-https-setup](local-https-setup.md).
 
-### 3. First login — `POST /iam/v4/api/auth/login`
+### 3. First login — `POST /iam/v4/auth/login`
 
 Full request shape: `../../blocks-iam/endpoints.md#authentication`. Fields are snake_case by
 design. **No project identifier goes in the body** — the `x-blocks-key` header carries the
 project context (the swagger's optional `client_id` field stays unused).
 
 ```bash
-curl -s -X POST "$BLOCKS_API_URL/iam/v4/api/auth/login" \
+curl -s -X POST "$BLOCKS_API_URL/iam/v4/auth/login" \
   -H "x-blocks-key: $X_BLOCKS_KEY" \
   -H "Content-Type: application/json" \
   -d "{
@@ -100,17 +108,17 @@ Complete the second step by calling login again with the challenge fields:
 ```
 
 `mfa_type` is an integer enum `0 | 1 | 2 | 3 | 4` — member meanings are not named in swagger; echo
-back the value the challenge gave you. MFA enrollment/management endpoints (`/api/mfa/*`) live in
+back the value the challenge gave you. MFA enrollment/management endpoints (`/mfa/*`) live in
 the `blocks-iam` skill.
 
 **Branch — 401.** Wrong credentials or unactivated account. Ask the user to re-check the account
 in the portal (step 1.4) or run [activate-first-user](activate-first-user.md)
-(`POST /api/auth/activate`).
+(`POST /auth/activate`).
 
-### 4. Smoke test — `GET /iam/v4/api/auth/me`
+### 4. Smoke test — `GET /iam/v4/auth/me`
 
 ```bash
-curl -s "$BLOCKS_API_URL/iam/v4/api/auth/me" \
+curl -s "$BLOCKS_API_URL/iam/v4/auth/me" \
   -H "x-blocks-key: $X_BLOCKS_KEY" \
   -H "Authorization: Bearer $ACCESS_TOKEN"
 ```
@@ -124,14 +132,14 @@ Tell the user setup is verified — and only then start building.
 
 If you operate with an account that spans projects, the session must be **impersonated into the
 project's tenant** before project APIs behave as expected — see
-[project-impersonation](project-impersonation.md) (login → `GET /os/v4/api/Project/Gets`
-for the `tenantId` → `POST /api/auth/impersonate`). If step 3's login already works against your
+[project-impersonation](project-impersonation.md) (login → `GET /os/v4/Project/Gets`
+for the `tenantId` → `POST /auth/impersonate`). If step 3's login already works against your
 project's APIs directly, you can skip this.
 
 ## Verify
 
-- `GET /iam/v4/api/auth/me` returns 200 with claims matching the developer account.
-- Optional deeper check: `GET /iam/v4/api/iam/me` (documented response `{ data, errors }`) returns
+- `GET /iam/v4/auth/me` returns 200 with claims matching the developer account.
+- Optional deeper check: `GET /iam/v4/iam/me` (documented response `{ data, errors }`) returns
   your profile record; requires the same two headers.
 - If `me` fails but login succeeded, you almost certainly mixed environments — the Blocks Key and
   the token must come from the same environment. See the troubleshooting table in SKILL.md.
