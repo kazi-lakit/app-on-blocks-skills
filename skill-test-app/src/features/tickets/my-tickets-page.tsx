@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { gql, type GqlResult } from "../data/gateway";
 import { useCurrentUser } from "../auth/use-session";
 import type { Purchase } from "./api";
+import { useT, useTn } from "../i18n";
 
 const PURCHASE_FIELDS =
   "ItemId EventId EventName TicketTypeId TicketTypeName UserId UserName Quantity TotalPrice Status";
@@ -11,6 +12,8 @@ export function MyTicketsPage() {
   const user = useCurrentUser();
   const [params] = useSearchParams();
   const justBought = params.get("just");
+  const t = useT();
+  const tn = useTn();
 
   const purchasesQuery = useQuery({
     queryKey: ["data", "getPurchases", { userId: user?.userId }],
@@ -31,7 +34,7 @@ export function MyTicketsPage() {
   if (!user) {
     return (
       <div className="alert alert--info">
-        Please <a href="/">sign in</a> to view your tickets.
+        {t("PLEASE_SIGN_IN_TICKETS")}
       </div>
     );
   }
@@ -42,30 +45,29 @@ export function MyTicketsPage() {
     <section className="my-tickets">
       <header className="events__header">
         <div>
-          <h1 className="events__title">My tickets</h1>
-          <p className="events__lede">
-            Everything you have booked, ready to revisit any time.
-          </p>
+          <h1 className="events__title">{t("TICKETS_TITLE")}</h1>
+          <p className="events__lede">{t("TICKETS_LEDE")}</p>
         </div>
       </header>
 
       {justBought ? (
         <div className="alert alert--info">
-          Purchase confirmed! Your tickets are below.
+          {t("PURCHASE_CONFIRMED_BANNER")}
         </div>
       ) : null}
 
       {purchasesQuery.isPending ? (
         <div className="events__state">
           <div className="spinner spinner--inline" aria-hidden="true" />
-          <span>Loading your tickets…</span>
+          <span>{t("TICKETS_LOADING")}</span>
         </div>
       ) : items.length === 0 ? (
         <div className="events__empty">
-          <h2>No tickets yet</h2>
+          <h2>{t("TICKETS_EMPTY_TITLE")}</h2>
           <p>
-            Browse <Link to="/events">upcoming events</Link> and grab your first
-            seat.
+            {t("TICKETS_EMPTY_DESC_PRE")}{" "}
+            <Link to="/events">{t("NAV_EVENTS")}</Link>{" "}
+            {t("TICKETS_EMPTY_DESC_POST")}
           </p>
         </div>
       ) : (
@@ -76,14 +78,14 @@ export function MyTicketsPage() {
                 <span className="tag">{p.TicketTypeName}</span>
                 <h3>{p.EventName}</h3>
                 <p>
-                  {p.Quantity} ticket{p.Quantity > 1 ? "s" : ""} ·{" "}
+                  {tn("TICKETS_LINE", p.Quantity, { count: p.Quantity })} ·{" "}
                   <strong>${p.TotalPrice.toFixed(2)}</strong>
                 </p>
               </div>
               <div className="ticket-row__right">
                 {p.EventId ? (
                   <Link to={`/events/${p.EventId}`} className="nav__cta">
-                    View event
+                    {t("BTN_VIEW_EVENT")}
                   </Link>
                 ) : null}
                 <span
@@ -91,7 +93,9 @@ export function MyTicketsPage() {
                     p.Status === "cancelled" ? "badge--sold" : ""
                   }`}
                 >
-                  {p.Status ?? "confirmed"}
+                  {p.Status === "cancelled"
+                    ? t("TICKETS_STATUS_CANCELLED")
+                    : t("TICKETS_STATUS_CONFIRMED")}
                 </span>
               </div>
             </li>

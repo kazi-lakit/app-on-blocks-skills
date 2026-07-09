@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { useUploadFile } from "./hooks";
+import { useT } from "../i18n";
 
 const MAX_BYTES = 8 * 1024 * 1024;
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "image/gif"];
@@ -10,7 +11,8 @@ interface Props {
   label?: string;
 }
 
-export function ImageUploadField({ value, onChange, label = "Cover image" }: Props) {
+export function ImageUploadField({ value, onChange }: Props) {
+  const t = useT();
   const upload = useUploadFile();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -19,11 +21,11 @@ export function ImageUploadField({ value, onChange, label = "Cover image" }: Pro
   async function handleFile(file: File) {
     setError(null);
     if (!ACCEPTED.includes(file.type)) {
-      setError("Please choose a JPG, PNG, WebP, or GIF image.");
+      setError(t("UPLOAD_ERR_TYPE"));
       return;
     }
     if (file.size > MAX_BYTES) {
-      setError("Image must be under 8 MB.");
+      setError(t("UPLOAD_ERR_SIZE"));
       return;
     }
     try {
@@ -49,7 +51,7 @@ export function ImageUploadField({ value, onChange, label = "Cover image" }: Pro
 
   return (
     <div className="field">
-      <label className="field__label">{label}</label>
+      <label className="field__label">{t("UPLOAD_LABEL")}</label>
       <div
         className={`image-upload ${dragOver ? "image-upload--drag" : ""} ${upload.isPending ? "image-upload--busy" : ""}`}
         onDragOver={(e) => {
@@ -62,7 +64,7 @@ export function ImageUploadField({ value, onChange, label = "Cover image" }: Pro
         {value ? (
           <img
             src={value}
-            alt="Cover preview"
+            alt={t("UPLOAD_PREVIEW_ALT")}
             className="image-upload__preview"
             onError={() => {
               /* ignore broken preview */
@@ -71,14 +73,14 @@ export function ImageUploadField({ value, onChange, label = "Cover image" }: Pro
         ) : (
           <div className="image-upload__placeholder">
             <span aria-hidden="true">🖼</span>
-            <p>Drop an image here, or click to choose</p>
-            <small>JPG, PNG, WebP, GIF up to 8 MB</small>
+            <p>{t("UPLOAD_DROP_HERE")}</p>
+            <small>{t("UPLOAD_FORMATS")}</small>
           </div>
         )}
         {upload.isPending ? (
           <div className="image-upload__overlay">
             <div className="spinner spinner--inline" aria-hidden="true" />
-            <span>Uploading…</span>
+            <span>{t("UPLOAD_UPLOADING")}</span>
           </div>
         ) : null}
         <div className="image-upload__actions">
@@ -88,7 +90,7 @@ export function ImageUploadField({ value, onChange, label = "Cover image" }: Pro
             onClick={() => fileInputRef.current?.click()}
             disabled={upload.isPending}
           >
-            {value ? "Replace image" : "Upload image"}
+            {value ? t("BTN_REPLACE_IMAGE") : t("BTN_UPLOAD_IMAGE")}
           </button>
           {value ? (
             <button
@@ -97,7 +99,7 @@ export function ImageUploadField({ value, onChange, label = "Cover image" }: Pro
               onClick={() => onChange("")}
               disabled={upload.isPending}
             >
-              Remove
+              {t("BTN_REMOVE")}
             </button>
           ) : null}
           <input
@@ -111,7 +113,7 @@ export function ImageUploadField({ value, onChange, label = "Cover image" }: Pro
       </div>
       {error ? <div className="alert alert--error">{error}</div> : null}
       <p className="field__hint">
-        Or paste an image URL:{" "}
+        {t("UPLOAD_PASTE_URL")}{" "}
         <input
           className="image-upload__url"
           type="url"

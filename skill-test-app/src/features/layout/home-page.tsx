@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useCurrentUser } from "../auth/use-session";
 import { LoginButton } from "../auth/login-button";
+import { LanguageSwitcher, useT } from "../i18n";
 
 function LogoMark() {
   return (
@@ -15,6 +16,7 @@ function LogoMark() {
 
 export function HomePage() {
   const user = useCurrentUser();
+  const t = useT();
 
   return (
     <>
@@ -23,25 +25,29 @@ export function HomePage() {
           <Link to="/" className="nav__brand">
             <LogoMark />
             <span className="nav__brand-name">
-              Stage<span className="nav__brand-dot">Pass</span>
+              {t("BRAND_NAME_1")}
+              <span className="nav__brand-dot">{t("BRAND_NAME_2")}</span>
             </span>
           </Link>
           <nav className="nav__links">
-            <Link to="/events">Events</Link>
+            <Link to="/events">{t("NAV_EVENTS")}</Link>
             {user ? (
               <>
-                <Link to="/events/new">Create event</Link>
-                <Link to="/tickets">My tickets</Link>
+                <Link to="/events/new">{t("NAV_CREATE_EVENT")}</Link>
+                <Link to="/tickets">{t("NAV_MY_TICKETS")}</Link>
               </>
             ) : null}
           </nav>
-          {user ? (
-            <Link to="/events" className="nav__cta">
-              Browse events
-            </Link>
-          ) : (
-            <LoginButton />
-          )}
+          <div className="nav__right">
+            <LanguageSwitcher />
+            {user ? (
+              <Link to="/events" className="nav__cta">
+                {t("NAV_BROWSE_EVENTS")}
+              </Link>
+            ) : (
+              <LoginButton />
+            )}
+          </div>
         </div>
       </header>
 
@@ -51,25 +57,21 @@ export function HomePage() {
           <div className="hero__content">
             <span className="hero__eyebrow">
               <span className="hero__eyebrow-dot" />
-              Event ticketing · Built on SELISE Blocks
+              {t("HOME_EYEBROW")}
             </span>
             <h1 className="hero__title">
-              Every event,
+              {t("HOME_TITLE_LINE_1")}
               <br />
-              <span className="hero__title-accent">one tap away.</span>
+              <span className="hero__title-accent">{t("HOME_TITLE_LINE_2")}</span>
             </h1>
-            <p className="hero__lede">
-              Discover concerts, conferences, workshops and more — pick your
-              seat, pick your price, and you're in. StagePass makes ticketing
-              frictionless.
-            </p>
+            <p className="hero__lede">{t("HOME_LEDE")}</p>
             <div className="hero__actions">
               <Link to="/events" className="btn-primary">
-                Browse events →
+                {t("HOME_BROWSE_EVENTS")}
               </Link>
               {user ? (
                 <Link to="/events/new" className="btn-ghost">
-                  Create an event
+                  {t("HOME_CREATE_EVENT")}
                 </Link>
               ) : (
                 <LoginButton />
@@ -77,13 +79,13 @@ export function HomePage() {
             </div>
             <ul className="hero__pills">
               <li>
-                <span className="dot dot--green" /> Secure sign-in
+                <span className="dot dot--green" /> {t("HOME_PILL_SIGNIN")}
               </li>
               <li>
-                <span className="dot dot--blue" /> Multi-tier ticketing
+                <span className="dot dot--blue" /> {t("HOME_PILL_MULTITIER")}
               </li>
               <li>
-                <span className="dot dot--pink" /> Real-time availability
+                <span className="dot dot--pink" /> {t("HOME_PILL_REALTIME")}
               </li>
             </ul>
           </div>
@@ -94,38 +96,29 @@ export function HomePage() {
             <div className="feature-card__icon" aria-hidden="true">
               🎟
             </div>
-            <h3>Multi-tier ticketing</h3>
-            <p>
-              VIP, Regular, Student — set seat allocations and prices per
-              ticket type, then watch availability update in real time.
-            </p>
+            <h3>{t("HOME_FEATURE_MULTITIER_TITLE")}</h3>
+            <p>{t("HOME_FEATURE_MULTITIER_DESC")}</p>
           </article>
           <article className="feature-card">
             <div className="feature-card__icon" aria-hidden="true">
               🗓
             </div>
-            <h3>Rich event details</h3>
-            <p>
-              Date, location, category, cover image — everything attendees
-              need to decide, in one clean page.
-            </p>
+            <h3>{t("HOME_FEATURE_DETAILS_TITLE")}</h3>
+            <p>{t("HOME_FEATURE_DETAILS_DESC")}</p>
           </article>
           <article className="feature-card">
             <div className="feature-card__icon" aria-hidden="true">
               ⚡
             </div>
-            <h3>Sold-out handling</h3>
-            <p>
-              Per-type and event-level sold-out states appear automatically, so
-              no one wastes time on a full house.
-            </p>
+            <h3>{t("HOME_FEATURE_SOLDOUT_TITLE")}</h3>
+            <p>{t("HOME_FEATURE_SOLDOUT_DESC")}</p>
           </article>
         </section>
 
         <footer className="page__footer">
-          <span>© {new Date().getFullYear()} StagePass</span>
+          <span>© {new Date().getFullYear()} {t("BRAND_FALLBACK")}</span>
           <span className="page__footer-sep">·</span>
-          <span>Powered by SELISE Blocks</span>
+          <span>{t("FOOTER_POWERED_BY")}</span>
         </footer>
       </main>
     </>

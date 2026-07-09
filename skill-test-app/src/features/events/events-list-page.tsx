@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { gql, type GqlResult } from "../data/gateway";
 import { EVENT_FIELDS, type Event } from "./api";
-import { CATEGORIES, type Category } from "./constants";
+import { CATEGORIES, CATEGORY_KEYS, type Category } from "./constants";
+import { useT } from "../i18n";
 
 function formatDate(value?: string | null) {
   if (!value) return "Date TBA";
@@ -49,9 +50,16 @@ function buildWhere(
   return Object.keys(where).length === 0 ? undefined : where;
 }
 
+function translateCategory(value: string | null | undefined, t: (k: string) => string): string {
+  if (!value) return t("EVENTS_CATEGORY_OTHER");
+  const key = CATEGORY_KEYS[value as Category];
+  return key ? t(key) : value;
+}
+
 export function EventsListPage() {
   const [category, setCategory] = useState<Category | "All">("All");
   const [search, setSearch] = useState("");
+  const t = useT();
 
   const where = useMemo(() => buildWhere(category, search), [category, search]);
 
@@ -100,11 +108,8 @@ export function EventsListPage() {
     <section className="events">
       <header className="events__header">
         <div>
-          <h1 className="events__title">Upcoming events</h1>
-          <p className="events__lede">
-            Browse what is on, find your seat, and lock in tickets before they
-            sell out.
-          </p>
+          <h1 className="events__title">{t("EVENTS_TITLE")}</h1>
+          <p className="events__lede">{t("EVENTS_LEDE")}</p>
         </div>
       </header>
 
@@ -115,7 +120,7 @@ export function EventsListPage() {
             className={`chip ${category === "All" ? "chip--active" : ""}`}
             onClick={() => setCategory("All")}
           >
-            All
+            {t("ALL")}
           </button>
           {CATEGORIES.map((c) => (
             <button
@@ -124,14 +129,14 @@ export function EventsListPage() {
               className={`chip ${category === c ? "chip--active" : ""}`}
               onClick={() => setCategory(c)}
             >
-              {c}
+              {t(CATEGORY_KEYS[c])}
             </button>
           ))}
         </div>
         <input
           className="events__search"
           type="search"
-          placeholder="Search by event name…"
+          placeholder={t("EVENTS_SEARCH_PLACEHOLDER")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -140,16 +145,16 @@ export function EventsListPage() {
       {eventsQuery.isPending || ticketTotalsQuery.isPending ? (
         <div className="events__state">
           <div className="spinner spinner--inline" aria-hidden="true" />
-          <span>Loading events…</span>
+          <span>{t("EVENTS_LOADING")}</span>
         </div>
       ) : eventsQuery.error ? (
         <div className="alert alert--error">
-          Could not load events: {String(eventsQuery.error)}
+          {t("EVENTS_LOAD_ERROR_PREFIX")} {String(eventsQuery.error)}
         </div>
       ) : items.length === 0 ? (
         <div className="events__empty">
-          <h2>No events match your filters</h2>
-          <p>Try a different category or clear your search.</p>
+          <h2>{t("EVENTS_EMPTY_TITLE")}</h2>
+          <p>{t("EVENTS_EMPTY_DESC")}</p>
         </div>
       ) : (
         <div className="events__grid">
@@ -171,8 +176,8 @@ export function EventsListPage() {
                   }
                   aria-hidden="true"
                 >
-                  {!e.ImageUrl ? <span>StagePass</span> : null}
-                  <span className={categoryClass(e.Category)}>{e.Category ?? "Other"}</span>
+                  {!e.ImageUrl ? <span>{t("BRAND_FALLBACK")}</span> : null}
+                  <span className={categoryClass(e.Category)}>{translateCategory(e.Category, t)}</span>
                 </div>
                 <div className="event-card__body">
                   <h3 className="event-card__title">{e.Name}</h3>
@@ -182,9 +187,11 @@ export function EventsListPage() {
                   <p className="event-card__meta">{e.Location}</p>
                   <div className="event-card__foot">
                     {isSoldOut ? (
-                      <span className="badge badge--sold">Sold out</span>
+                      <span className="badge badge--sold">{t("EVENTS_SOLD_OUT")}</span>
                     ) : (
-                      <span className="badge">{remaining} seats left</span>
+                      <span className="badge">
+                        {t("EVENTS_SEATS_LEFT", { count: remaining })}
+                      </span>
                     )}
                   </div>
                 </div>

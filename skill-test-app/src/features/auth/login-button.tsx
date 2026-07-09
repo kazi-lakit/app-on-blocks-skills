@@ -1,6 +1,8 @@
 import { startLogin } from "./sso";
+import { useT } from "../i18n";
 
 export function LoginButton() {
+  const t = useT();
   return (
     <button
       type="button"
@@ -25,7 +27,7 @@ export function LoginButton() {
           <line x1="15" y1="12" x2="3" y2="12" />
         </svg>
       </span>
-      Sign in with Blocks
+      {t("BTN_SIGN_IN_WITH_BLOCKS")}
       <span className="btn-primary__arrow" aria-hidden="true">
         →
       </span>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { activateAccount } from "./activate";
+import { useT } from "../i18n";
 
 export function ActivatePage() {
   const [params] = useSearchParams();
@@ -12,6 +13,7 @@ export function ActivatePage() {
   const [lastName, setLastName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const t = useT();
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -34,24 +36,21 @@ export function ActivatePage() {
           <div className="feature-card__icon" aria-hidden="true">
             ✨
           </div>
-          <h1 className="auth-card__title">Activate your account</h1>
-          <p className="auth-card__lede">
-            Set a password and finish setting up your Blocks identity. It takes
-            about 20 seconds.
-          </p>
+          <h1 className="auth-card__title">{t("AUTH_ACTIVATE_TITLE")}</h1>
+          <p className="auth-card__lede">{t("AUTH_ACTIVATE_LEDE")}</p>
         </div>
 
         <form className="form" onSubmit={onSubmit} noValidate>
           <div className="field">
             <label className="field__label" htmlFor="code">
-              Activation code
+              {t("AUTH_ACTIVATION_CODE")}
             </label>
             <input
               id="code"
               className="field__input"
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              placeholder="Paste the code from your invite"
+              placeholder={t("AUTH_ACTIVATION_CODE_PLACEHOLDER")}
               required
               autoComplete="one-time-code"
             />
@@ -60,7 +59,7 @@ export function ActivatePage() {
           <div className="field-row">
             <div className="field">
               <label className="field__label" htmlFor="firstName">
-                First name
+                {t("FIRST_NAME")}
               </label>
               <input
                 id="firstName"
@@ -74,7 +73,7 @@ export function ActivatePage() {
             </div>
             <div className="field">
               <label className="field__label" htmlFor="lastName">
-                Last name
+                {t("LAST_NAME")}
               </label>
               <input
                 id="lastName"
@@ -90,7 +89,7 @@ export function ActivatePage() {
 
           <div className="field">
             <label className="field__label" htmlFor="password">
-              Password
+              {t("PASSWORD")}
             </label>
             <input
               id="password"
@@ -98,14 +97,12 @@ export function ActivatePage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="At least 8 characters"
+              placeholder={t("AUTH_PASSWORD_PLACEHOLDER")}
               required
               minLength={8}
               autoComplete="new-password"
             />
-            <span className="field__hint">
-              Use 8+ characters with a mix of letters, numbers & symbols.
-            </span>
+            <span className="field__hint">{t("AUTH_PASSWORD_HINT")}</span>
           </div>
 
           {error && <div className="alert alert--error">{error}</div>}
@@ -122,15 +119,15 @@ export function ActivatePage() {
                   aria-hidden="true"
                   style={{ width: 16, height: 16 }}
                 />
-                Activating…
+                {t("BTN_ACTIVATING")}
               </>
             ) : (
-              <>Activate account</>
+              <>{t("BTN_ACTIVATE_ACCOUNT")}</>
             )}
           </button>
 
           <Link to="/" className="auth-card__back">
-            ← Back to sign in
+            {t("AUTH_BACK_TO_SIGN_IN")}
           </Link>
         </form>
       </div>

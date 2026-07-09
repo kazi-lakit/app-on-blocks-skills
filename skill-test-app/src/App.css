@@ -99,6 +99,12 @@
   gap: 28px;
 }
 
+.nav__right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .nav__links a {
   color: var(--text-soft);
   font-weight: 500;
@@ -1496,4 +1502,60 @@
 .image-upload__url:focus {
   border-color: transparent;
   box-shadow: 0 0 0 2px var(--primary);
+}
+
+.lang-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 8px;
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  font-size: 0.85rem;
+  color: var(--text-h);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.lang-switcher:hover {
+  background: var(--surface-strong);
+}
+
+.lang-switcher__label {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.lang-switcher__select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 500;
+  padding: 4px 18px 4px 2px;
+  cursor: pointer;
+  outline: none;
+}
+
+.lang-switcher__select option {
+  background: var(--surface-strong, #1a1a1a);
+  color: var(--text-h, #fff);
+}
+
+.lang-switcher__code {
+  font-size: 0.7rem;
+  color: var(--text-soft);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.lang-switcher__select {
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 12px) 55%, calc(100% - 7px) 55%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
 }

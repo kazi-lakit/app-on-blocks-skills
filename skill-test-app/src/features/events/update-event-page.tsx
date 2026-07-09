@@ -4,10 +4,11 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { gql, type ActionResponse, type GqlResult } from "../data/gateway";
 import { useCurrentUser } from "../auth/use-session";
-import { CATEGORIES } from "./constants";
+import { CATEGORIES, CATEGORY_KEYS } from "./constants";
 import type { Event } from "./api";
 import type { TicketType } from "./ticket-types";
 import { ImageUploadField } from "../files/image-upload-field";
+import { useT } from "../i18n";
 
 interface TicketTypeDraft {
   id: string;
@@ -40,6 +41,7 @@ export function UpdateEventPage() {
   const { id = "" } = useParams();
   const navigate = useNavigate();
   const user = useCurrentUser();
+  const t = useT();
 
   const eventQuery = useQuery({
     queryKey: ["data", "getEvents", { id }],
@@ -108,7 +110,7 @@ export function UpdateEventPage() {
   if (!user) {
     return (
       <div className="alert alert--info">
-        Please <Link to="/">sign in</Link> to edit events.
+        {t("PLEASE_SIGN_IN_EDIT")}
       </div>
     );
   }
@@ -117,7 +119,7 @@ export function UpdateEventPage() {
     return (
       <div className="events__state">
         <div className="spinner spinner--inline" aria-hidden="true" />
-        <span>Loading event…</span>
+        <span>{t("EVENT_LOADING")}</span>
       </div>
     );
   }
@@ -125,7 +127,7 @@ export function UpdateEventPage() {
   if (eventQuery.error || !eventQuery.data) {
     return (
       <div className="alert alert--error">
-        Event not found. <Link to="/events">Back to events</Link>
+        {t("EVENT_NOT_FOUND")} <Link to="/events">{t("LINK_BACK_TO_EVENTS")}</Link>
       </div>
     );
   }
@@ -136,8 +138,8 @@ export function UpdateEventPage() {
   if (event.CreatedBy !== currentUser.userId) {
     return (
       <div className="alert alert--error">
-        You can only edit events you created.{" "}
-        <Link to={`/events/${event.ItemId}`}>Back to event</Link>
+        {t("FORM_ERR_OWNER_ONLY_EDIT")}{" "}
+        <Link to={`/events/${event.ItemId}`}>{t("LINK_BACK_TO_EVENT")}</Link>
       </div>
     );
   }
@@ -158,40 +160,38 @@ export function UpdateEventPage() {
     setError(null);
 
     if (!name.trim() || !location.trim() || !date) {
-      setError("Name, date, and location are required.");
+      setError(t("FORM_ERR_NAME_DATE_LOCATION"));
       return;
     }
     const max = Number(maxSeats);
     if (!Number.isFinite(max) || max <= 0) {
-      setError("Max seats must be a positive number.");
+      setError(t("FORM_ERR_MAX_SEATS_POSITIVE"));
       return;
     }
     if (totalAllocated > max) {
-      setError(
-        `Sum of ticket-type seats (${totalAllocated}) exceeds the event max (${max}).`
-      );
+      setError(t("FORM_ERR_SEATS_EXCEED_MAX", { allocated: totalAllocated, max }));
       return;
     }
     if (ticketTypes.length === 0) {
-      setError("Add at least one ticket type.");
+      setError(t("FORM_ERR_ADD_TICKET"));
       return;
     }
-    for (const t of ticketTypes) {
-      if (!t.name.trim()) {
-        setError("Every ticket type needs a name.");
+    for (const tt of ticketTypes) {
+      if (!tt.name.trim()) {
+        setError(t("FORM_ERR_TICKET_NAME_REQUIRED"));
         return;
       }
-      const p = Number(t.price);
-      const s = Number(t.seats);
+      const p = Number(tt.price);
+      const s = Number(tt.seats);
       if (!Number.isFinite(p) || p < 0 || !Number.isFinite(s) || s <= 0) {
-        setError("Each ticket type needs a valid price (≥0) and seat count (>0).");
+        setError(t("FORM_ERR_TICKET_PRICE_SEATS"));
         return;
       }
-      if (t.existing && t.itemId) {
-        const original = ticketTypesQuery.data!.find((x) => x.ItemId === t.itemId);
+      if (tt.existing && tt.itemId) {
+        const original = ticketTypesQuery.data!.find((x) => x.ItemId === tt.itemId);
         if (original && s < (original.SoldCount ?? 0)) {
           setError(
-            `Cannot reduce "${t.name}" below the number already sold (${original.SoldCount}).`
+            t("FORM_ERR_TICKET_REDUCE_SOLD", { name: tt.name, sold: original.SoldCount ?? 0 })
           );
           return;
         }
@@ -200,7 +200,6 @@ export function UpdateEventPage() {
 
     setSubmitting(true);
     try {
-      // ownership-gated where: only updates if CreatedBy matches current user
       const eventWhere = {
         ItemId: { eq: event.ItemId },
         CreatedBy: { eq: currentUser.userId },
@@ -224,24 +223,21 @@ export function UpdateEventPage() {
       );
 
       if (updateRes.updateEvent.totalImpactedData === 0) {
-        throw new Error(
-          "Update was rejected — you can only edit events you created."
-        );
+        throw new Error(t("FORM_ERR_UPDATE_REJECTED"));
       }
 
-      // upsert ticket types
-      for (const t of ticketTypes) {
-        if (t.existing && t.itemId) {
+      for (const tt of ticketTypes) {
+        if (tt.existing && tt.itemId) {
           await gql<{ updateTicketType: ActionResponse }>(
             `mutation($w:TicketTypeFilterInput,$input:TicketTypeUpdateInput!){
                updateTicketType(where:$w,input:$input){ acknowledged totalImpactedData message }
              }`,
             {
-              w: { ItemId: { eq: t.itemId }, EventId: { eq: event.ItemId } },
+              w: { ItemId: { eq: tt.itemId }, EventId: { eq: event.ItemId } },
               input: {
-                Name: t.name.trim(),
-                Price: Number(t.price),
-                SeatAllocation: Number(t.seats),
+                Name: tt.name.trim(),
+                Price: Number(tt.price),
+                SeatAllocation: Number(tt.seats),
               },
             }
           );
@@ -253,9 +249,9 @@ export function UpdateEventPage() {
             {
               input: {
                 EventId: event.ItemId,
-                Name: t.name.trim(),
-                Price: Number(t.price),
-                SeatAllocation: Number(t.seats),
+                Name: tt.name.trim(),
+                Price: Number(tt.price),
+                SeatAllocation: Number(tt.seats),
                 SoldCount: 0,
               },
             }
@@ -263,7 +259,6 @@ export function UpdateEventPage() {
         }
       }
 
-      // delete removed ticket types
       for (const removedId of removedIds) {
         await gql<{ deleteTicketType: ActionResponse }>(
           `mutation($w:TicketTypeFilterInput){
@@ -285,10 +280,8 @@ export function UpdateEventPage() {
     <section className="create-event">
       <header className="events__header">
         <div>
-          <h1 className="events__title">Edit event</h1>
-          <p className="events__lede">
-            Update details and ticket types. Changes go live immediately.
-          </p>
+          <h1 className="events__title">{t("FORM_TITLE_EDIT")}</h1>
+          <p className="events__lede">{t("FORM_LEDE_EDIT")}</p>
         </div>
       </header>
 
@@ -297,7 +290,7 @@ export function UpdateEventPage() {
 
         <div className="field">
           <label className="field__label" htmlFor="name">
-            Event name
+            {t("FORM_NAME")}
           </label>
           <input
             id="name"
@@ -309,7 +302,7 @@ export function UpdateEventPage() {
 
         <div className="field">
           <label className="field__label" htmlFor="description">
-            Description
+            {t("DESCRIPTION")}
           </label>
           <textarea
             id="description"
@@ -323,7 +316,7 @@ export function UpdateEventPage() {
         <div className="field-row">
           <div className="field">
             <label className="field__label" htmlFor="date">
-              Date &amp; time
+              {t("FORM_DATE")}
             </label>
             <input
               id="date"
@@ -335,7 +328,7 @@ export function UpdateEventPage() {
           </div>
           <div className="field">
             <label className="field__label" htmlFor="category">
-              Category
+              {t("FORM_CATEGORY")}
             </label>
             <select
               id="category"
@@ -345,7 +338,7 @@ export function UpdateEventPage() {
             >
               {CATEGORIES.map((c) => (
                 <option key={c} value={c}>
-                  {c}
+                  {t(CATEGORY_KEYS[c])}
                 </option>
               ))}
             </select>
@@ -354,7 +347,7 @@ export function UpdateEventPage() {
 
         <div className="field">
           <label className="field__label" htmlFor="location">
-            Location
+            {t("FORM_LOCATION")}
           </label>
           <input
             id="location"
@@ -367,7 +360,7 @@ export function UpdateEventPage() {
         <div className="field-row">
           <div className="field">
             <label className="field__label" htmlFor="maxSeats">
-              Max seats
+              {t("FORM_MAX_SEATS")}
             </label>
             <input
               id="maxSeats"
@@ -383,53 +376,53 @@ export function UpdateEventPage() {
 
         <div className="ticket-types">
           <div className="ticket-types__head">
-            <h2>Ticket types</h2>
+            <h2>{t("FORM_TICKET_TYPES")}</h2>
             <button
               type="button"
               className="nav__cta"
               onClick={() => setTicketTypes((arr) => [...arr, makeEmpty()])}
             >
-              + Add type
+              {t("BTN_ADD_TYPE")}
             </button>
           </div>
           <div className="ticket-types__list">
-            {ticketTypes.map((t, idx) => (
-              <div key={t.id} className="ticket-type-row">
+            {ticketTypes.map((tt, idx) => (
+              <div key={tt.id} className="ticket-type-row">
                 <div className="field">
-                  <label className="field__label">Name</label>
+                  <label className="field__label">{t("FORM_TICKET_NAME")}</label>
                   <input
                     className="field__input"
-                    value={t.name}
+                    value={tt.name}
                     onChange={(e) => updateDraft(idx, { name: e.target.value })}
                   />
                 </div>
                 <div className="field">
-                  <label className="field__label">Price ($)</label>
+                  <label className="field__label">{t("FORM_TICKET_PRICE")}</label>
                   <input
                     className="field__input"
                     type="number"
                     min={0}
                     step="0.01"
-                    value={t.price}
+                    value={tt.price}
                     onChange={(e) => updateDraft(idx, { price: e.target.value })}
                   />
                 </div>
                 <div className="field">
-                  <label className="field__label">Seats</label>
+                  <label className="field__label">{t("FORM_TICKET_SEATS")}</label>
                   <input
                     className="field__input"
                     type="number"
                     min={1}
-                    value={t.seats}
+                    value={tt.seats}
                     onChange={(e) => updateDraft(idx, { seats: e.target.value })}
                   />
                 </div>
                 <button
                   type="button"
                   className="ticket-type-row__remove"
-                  aria-label="Remove ticket type"
+                  aria-label={t("BTN_REMOVE_TICKET_ARIA")}
                   onClick={() => {
-                    if (t.existing && t.itemId) setRemovedIds((arr) => [...arr, t.itemId!]);
+                    if (tt.existing && tt.itemId) setRemovedIds((arr) => [...arr, tt.itemId!]);
                     setTicketTypes((arr) => arr.filter((_, i) => i !== idx));
                   }}
                 >
@@ -439,21 +432,20 @@ export function UpdateEventPage() {
             ))}
           </div>
           <p className="field__hint">
-            Total allocated across ticket types: <strong>{totalAllocated}</strong>{" "}
-            / {maxSeats || 0}
+            {t("FORM_TOTAL_HINT", { count: totalAllocated, max: Number(maxSeats) || 0 })}
           </p>
         </div>
 
         <div className="form__actions">
           <Link to={`/events/${event.ItemId}`} className="btn-ghost form__back">
-            Cancel
+            {t("BTN_CANCEL")}
           </Link>
           <button
             type="submit"
             className="btn-primary form__submit"
             disabled={submitting}
           >
-            {submitting ? "Saving…" : "Save changes"}
+            {submitting ? t("BTN_SAVING") : t("BTN_SAVE_CHANGES")}
           </button>
         </div>
       </form>

@@ -5,6 +5,8 @@ import { gql, type ActionResponse, type GqlResult } from "../data/gateway";
 import { useCurrentUser } from "../auth/use-session";
 import { EVENT_FIELDS, type Event } from "./api";
 import type { TicketType } from "./ticket-types";
+import { CATEGORY_KEYS, type Category } from "./constants";
+import { useT, useTn } from "../i18n";
 
 const TICKET_TYPE_FIELDS =
   "ItemId EventId Name Price SeatAllocation SoldCount";
@@ -23,11 +25,19 @@ function formatDate(value?: string | null) {
   });
 }
 
+function translateCategory(value: string | null | undefined, t: (k: string) => string): string {
+  if (!value) return t("EVENTS_CATEGORY_OTHER");
+  const key = CATEGORY_KEYS[value as Category];
+  return key ? t(key) : value;
+}
+
 export function EventDetailPage() {
   const { id = "" } = useParams();
   const navigate = useNavigate();
   const user = useCurrentUser();
   const qc = useQueryClient();
+  const t = useT();
+  const tn = useTn();
 
   const eventQuery = useQuery({
     queryKey: ["data", "getEvents", { id }],
@@ -131,7 +141,7 @@ export function EventDetailPage() {
     return (
       <div className="events__state">
         <div className="spinner spinner--inline" aria-hidden="true" />
-        <span>Loading event…</span>
+        <span>{t("EVENT_LOADING")}</span>
       </div>
     );
   }
@@ -139,9 +149,9 @@ export function EventDetailPage() {
   if (eventQuery.error || !event) {
     return (
       <div className="alert alert--error">
-        Event not found.{" "}
+        {t("EVENT_NOT_FOUND")}{" "}
         <Link to="/events" className="link">
-          Back to events
+          {t("EVENT_BACK_ALL")}
         </Link>
       </div>
     );
@@ -154,42 +164,45 @@ export function EventDetailPage() {
           <img src={event.ImageUrl} alt={event.Name} />
         ) : (
           <div className="event-detail__cover-placeholder">
-            <span>StagePass</span>
+            <span>{t("BRAND_FALLBACK")}</span>
           </div>
         )}
       </div>
       <div className="event-detail__grid">
         <div className="event-detail__main">
           <Link to="/events" className="event-detail__back">
-            ← All events
+            {t("EVENT_BACK_ALL")}
           </Link>
-          <span className="tag tag--lg">{event.Category ?? "Other"}</span>
+          <span className="tag tag--lg">{translateCategory(event.Category, t)}</span>
           <h1 className="event-detail__title">{event.Name}</h1>
           <ul className="event-detail__meta">
             <li>
-              <strong>When</strong>
+              <strong>{t("EVENT_META_WHEN")}</strong>
               <span>{formatDate(event.EventDate)}</span>
             </li>
             <li>
-              <strong>Where</strong>
+              <strong>{t("EVENT_META_WHERE")}</strong>
               <span>{event.Location}</span>
             </li>
             <li>
-              <strong>Capacity</strong>
+              <strong>{t("EVENT_META_CAPACITY")}</strong>
               <span>
                 {totals.allocated > 0
-                  ? `${totals.remaining} of ${totals.allocated} seats remaining`
-                  : `${event.MaxSeats ?? 0} seats`}
+                  ? t("EVENT_META_CAPACITY_REMAINING", {
+                      remaining: totals.remaining,
+                      allocated: totals.allocated,
+                    })
+                  : t("EVENT_META_CAPACITY_SEATS", { count: event.MaxSeats ?? 0 })}
               </span>
             </li>
             <li>
-              <strong>Organizer</strong>
-              <span>{event.CreatedByName || "StagePass community"}</span>
+              <strong>{t("EVENT_META_ORGANIZER")}</strong>
+              <span>{event.CreatedByName || t("EVENT_META_ORGANIZER_DEFAULT")}</span>
             </li>
           </ul>
           {event.Description ? (
             <div className="event-detail__about">
-              <h2>About this event</h2>
+              <h2>{t("EVENT_ABOUT_THIS")}</h2>
               <p>{event.Description}</p>
             </div>
           ) : null}
@@ -200,7 +213,7 @@ export function EventDetailPage() {
                 to={`/events/${event.ItemId}/edit`}
                 className="btn-primary"
               >
-                Edit event
+                {t("BTN_EDIT_EVENT")}
               </Link>
             </div>
           ) : null}
@@ -208,49 +221,47 @@ export function EventDetailPage() {
 
         <aside className="event-detail__aside">
           <div className="ticket-card">
-            <h2 className="ticket-card__title">Choose your ticket</h2>
+            <h2 className="ticket-card__title">{t("EVENT_TICKET_TITLE")}</h2>
             {ticketTypesQuery.isPending ? (
               <div className="events__state">
                 <div className="spinner spinner--inline" aria-hidden="true" />
-                <span>Loading tickets…</span>
+                <span>{t("EVENT_LOADING_TICKETS")}</span>
               </div>
             ) : ticketTypes.length === 0 ? (
-              <p className="ticket-card__empty">
-                No ticket types have been added yet.
-              </p>
+              <p className="ticket-card__empty">{t("EVENT_TICKETS_EMPTY")}</p>
             ) : (
               <div className="ticket-card__list">
-                {ticketTypes.map((t) => {
+                {ticketTypes.map((t2) => {
                   const remaining = Math.max(
                     0,
-                    (t.SeatAllocation ?? 0) - (t.SoldCount ?? 0)
+                    (t2.SeatAllocation ?? 0) - (t2.SoldCount ?? 0)
                   );
                   const soldOut = remaining <= 0;
-                  const isSelected = selectedId === t.ItemId;
+                  const isSelected = selectedId === t2.ItemId;
                   return (
                     <button
-                      key={t.ItemId}
+                      key={t2.ItemId}
                       type="button"
                       disabled={soldOut}
                       className={`ticket-option ${isSelected ? "ticket-option--active" : ""} ${
                         soldOut ? "ticket-option--sold" : ""
                       }`}
                       onClick={() => {
-                        setSelectedId(t.ItemId);
+                        setSelectedId(t2.ItemId);
                         setQuantity(1);
                       }}
                     >
                       <div className="ticket-option__head">
-                        <span className="ticket-option__name">{t.Name}</span>
+                        <span className="ticket-option__name">{t2.Name}</span>
                         <span className="ticket-option__price">
-                          ${t.Price.toFixed(2)}
+                          ${t2.Price.toFixed(2)}
                         </span>
                       </div>
                       <div className="ticket-option__foot">
                         {soldOut ? (
-                          <span className="badge badge--sold">Sold out</span>
+                          <span className="badge badge--sold">{t("EVENT_SOLD_OUT_BADGE")}</span>
                         ) : (
-                          <span className="badge">{remaining} left</span>
+                          <span className="badge">{t("EVENT_REMAINING_LEFT", { count: remaining })}</span>
                         )}
                       </div>
                     </button>
@@ -262,7 +273,7 @@ export function EventDetailPage() {
             {selected ? (
               <div className="ticket-card__qty">
                 <label className="field__label" htmlFor="qty">
-                  Quantity
+                  {t("EVENT_QUANTITY")}
                 </label>
                 <div className="ticket-card__qty-row">
                   <button
@@ -296,7 +307,7 @@ export function EventDetailPage() {
                   </button>
                 </div>
                 <div className="ticket-card__summary">
-                  <span>Total</span>
+                  <span>{t("EVENT_TOTAL")}</span>
                   <strong>${(selected.Price * quantity).toFixed(2)}</strong>
                 </div>
               </div>
@@ -314,19 +325,17 @@ export function EventDetailPage() {
                 onClick={() => purchaseMutation.mutate()}
               >
                 {purchaseMutation.isPending
-                  ? "Processing…"
+                  ? t("BTN_PROCESSING")
                   : selected
-                  ? `Buy ${quantity} ticket${quantity > 1 ? "s" : ""}`
-                  : "Select a ticket"}
+                  ? tn("BTN_BUY_TICKET", quantity, { count: quantity })
+                  : t("BTN_SELECT_TICKET")}
               </button>
             ) : (
               <Link to="/" className="btn-primary ticket-card__cta">
-                Sign in to buy tickets
+                {t("BTN_SIGN_IN_TO_BUY")}
               </Link>
             )}
-            <p className="ticket-card__fine">
-              Mock checkout — no payment is taken.
-            </p>
+            <p className="ticket-card__fine">{t("EVENT_FINEPRINT")}</p>
           </div>
         </aside>
       </div>
