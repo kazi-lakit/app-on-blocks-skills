@@ -3,6 +3,7 @@ import { useCurrentUser, useSignOut } from "../auth/use-session";
 import { startLogin } from "../auth/sso";
 import { LanguageSwitcher, useT } from "../i18n";
 import { PageBackdrop } from "../../components/page-backdrop";
+import { ThemeSwitcher } from "../../components/theme-switcher";
 
 function LogoMark() {
   return (
@@ -72,6 +73,7 @@ export function Layout() {
               ) : null}
             </nav>
             <div className="nav__right">
+              <ThemeSwitcher />
               <LanguageSwitcher />
               {user ? (
                 <div className="nav__user">

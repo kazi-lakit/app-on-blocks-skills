@@ -8,6 +8,23 @@
       name="description"
       content="CoinCompass — Your Ultimate Guide to the Cryptocurrency World."
     />
+    <script>
+      (function () {
+        try {
+          var saved = window.localStorage.getItem("stagepass:theme");
+          var theme =
+            saved === "light" || saved === "dark"
+              ? saved
+              : window.matchMedia &&
+                window.matchMedia("(prefers-color-scheme: light)").matches
+              ? "light"
+              : "dark";
+          document.documentElement.setAttribute("data-theme", theme);
+        } catch (e) {
+          document.documentElement.setAttribute("data-theme", "dark");
+        }
+      })();
+    </script>
     <title>CoinCompass</title>
   </head>
   <body>

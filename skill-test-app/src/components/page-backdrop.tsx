@@ -49,13 +49,13 @@ void main() {
   ptr.x *= aspect;
   p += ptr * 0.03;
 
-  // color palette
-  vec3 deep    = vec3(0.020, 0.078, 0.043);
-  vec3 forest  = vec3(0.040, 0.157, 0.075);
-  vec3 mid     = vec3(0.071, 0.282, 0.137);
-  vec3 lime    = vec3(0.784, 0.961, 0.259);
-  vec3 cyan    = vec3(0.486, 0.969, 0.831);
-  vec3 glow    = vec3(0.580, 0.870, 0.220);
+  // color palette — near-black dark theme
+  vec3 deep    = vec3(0.004, 0.010, 0.005);
+  vec3 forest  = vec3(0.008, 0.030, 0.014);
+  vec3 mid     = vec3(0.016, 0.060, 0.029);
+  vec3 lime    = vec3(0.380, 0.620, 0.090);
+  vec3 cyan    = vec3(0.370, 0.760, 0.620);
+  vec3 glow    = vec3(0.280, 0.460, 0.090);
 
   // base vertical gradient
   float gy = smoothstep(0.0, 1.0, p.y);
@@ -72,19 +72,19 @@ void main() {
 
   // slow-moving light bloom
   float bloom = exp(-length(p - vec2(0.6 + sin(t) * 0.08, 0.42 + cos(t * 0.8) * 0.06)) * 1.6);
-  col += glow * bloom * 0.55 * breathe;
+  col += glow * bloom * 0.22 * breathe;
 
   // lime rays
   float ray1 = smoothstep(0.55, 1.0, sin(p.x * 3.5 + p.y * 2.0 + t * 1.6) * 0.5 + 0.5);
-  col += lime * ray1 * 0.10;
+  col += lime * ray1 * 0.04;
 
   // subtle cyan aurora glow top-right
   float aurora = exp(-length(p - vec2(0.95 * aspect, 0.85)) * 2.2);
-  col += cyan * aurora * 0.20 * breathe;
+  col += cyan * aurora * 0.08 * breathe;
 
   // apply FBM mesh glow
-  col += lime * n * 0.18;
-  col += cyan * pow(n, 3.0) * 0.08;
+  col += lime * n * 0.08;
+  col += cyan * pow(n, 3.0) * 0.03;
 
   // vignette
   float vig = 1.0 - length(p - vec2(0.5 * aspect, 0.5)) * 0.35;
