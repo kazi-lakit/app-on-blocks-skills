@@ -6,6 +6,7 @@ import { useCurrentUser } from "../auth/use-session";
 import { CATEGORIES, CATEGORY_KEYS } from "./constants";
 import { ImageUploadField } from "../files/image-upload-field";
 import { useT } from "../i18n";
+import { Reveal } from "../../components/reveal";
 
 interface TicketTypeDraft {
   id: string;
@@ -144,12 +145,14 @@ export function CreateEventPage() {
 
   return (
     <section className="create-event">
-      <header className="events__header">
-        <div>
-          <h1 className="events__title">{t("FORM_TITLE_CREATE")}</h1>
-          <p className="events__lede">{t("FORM_LEDE_CREATE")}</p>
-        </div>
-      </header>
+      <Reveal variant="up">
+        <header className="events__header">
+          <div>
+            <h1 className="events__title">{t("FORM_TITLE_CREATE")}</h1>
+            <p className="events__lede">{t("FORM_LEDE_CREATE")}</p>
+          </div>
+        </header>
+      </Reveal>
 
       <form className="form create-event__form" onSubmit={onSubmit}>
         {error ? <div className="alert alert--error">{error}</div> : null}

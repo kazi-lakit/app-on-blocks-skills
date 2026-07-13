@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { activateAccount } from "./activate";
 import { useT } from "../i18n";
+import { PageBackdrop } from "../../components/page-backdrop";
 
 export function ActivatePage() {
   const [params] = useSearchParams();
@@ -30,17 +31,20 @@ export function ActivatePage() {
   }
 
   return (
-    <div className="auth-shell">
-      <div className="auth-card">
-        <div className="auth-card__head">
-          <div className="feature-card__icon" aria-hidden="true">
-            ✨
-          </div>
-          <h1 className="auth-card__title">{t("AUTH_ACTIVATE_TITLE")}</h1>
-          <p className="auth-card__lede">{t("AUTH_ACTIVATE_LEDE")}</p>
-        </div>
+    <>
+      <PageBackdrop />
+      <div className="auth-shell">
+        <div className="auth-card">
+          <div className="auth-card__surface">
+            <div className="auth-card__head">
+              <div className="feature-card__icon" aria-hidden="true">
+                ✨
+              </div>
+              <h1 className="auth-card__title">{t("AUTH_ACTIVATE_TITLE")}</h1>
+              <p className="auth-card__lede">{t("AUTH_ACTIVATE_LEDE")}</p>
+            </div>
 
-        <form className="form" onSubmit={onSubmit} noValidate>
+            <form className="form" onSubmit={onSubmit} noValidate>
           <div className="field">
             <label className="field__label" htmlFor="code">
               {t("AUTH_ACTIVATION_CODE")}
@@ -126,11 +130,13 @@ export function ActivatePage() {
             )}
           </button>
 
-          <Link to="/" className="auth-card__back">
-            {t("AUTH_BACK_TO_SIGN_IN")}
-          </Link>
-        </form>
+            <Link to="/" className="auth-card__back">
+              {t("AUTH_BACK_TO_SIGN_IN")}
+            </Link>
+          </form>
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

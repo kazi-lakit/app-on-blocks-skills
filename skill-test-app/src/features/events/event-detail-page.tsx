@@ -6,7 +6,9 @@ import { useCurrentUser } from "../auth/use-session";
 import { EVENT_FIELDS, type Event } from "./api";
 import type { TicketType } from "./ticket-types";
 import { CATEGORY_KEYS, type Category } from "./constants";
+import { EventDetailSkeleton, Skeleton } from "../../components/skeleton";
 import { useT, useTn } from "../i18n";
+import { Reveal } from "../../components/reveal";
 
 const TICKET_TYPE_FIELDS =
   "ItemId EventId Name Price SeatAllocation SoldCount";
@@ -138,12 +140,7 @@ export function EventDetailPage() {
   });
 
   if (eventQuery.isPending) {
-    return (
-      <div className="events__state">
-        <div className="spinner spinner--inline" aria-hidden="true" />
-        <span>{t("EVENT_LOADING")}</span>
-      </div>
-    );
+    return <EventDetailSkeleton />;
   }
 
   if (eventQuery.error || !event) {
@@ -159,23 +156,28 @@ export function EventDetailPage() {
 
   return (
     <section className="event-detail">
-      <div className="event-detail__cover">
-        {event.ImageUrl ? (
-          <img src={event.ImageUrl} alt={event.Name} />
-        ) : (
-          <div className="event-detail__cover-placeholder">
-            <span>{t("BRAND_FALLBACK")}</span>
-          </div>
-        )}
-      </div>
+      <Reveal variant="scale">
+        <div className="event-detail__cover">
+          {event.ImageUrl ? (
+            <img src={event.ImageUrl} alt={event.Name} />
+          ) : (
+            <div className="event-detail__cover-placeholder">
+              <span>{t("BRAND_FALLBACK")}</span>
+            </div>
+          )}
+        </div>
+      </Reveal>
       <div className="event-detail__grid">
         <div className="event-detail__main">
-          <Link to="/events" className="event-detail__back">
-            {t("EVENT_BACK_ALL")}
-          </Link>
-          <span className="tag tag--lg">{translateCategory(event.Category, t)}</span>
-          <h1 className="event-detail__title">{event.Name}</h1>
-          <ul className="event-detail__meta">
+          <Reveal variant="up">
+            <Link to="/events" className="event-detail__back">
+              {t("EVENT_BACK_ALL")}
+            </Link>
+            <span className="tag tag--lg">{translateCategory(event.Category, t)}</span>
+            <h1 className="event-detail__title">{event.Name}</h1>
+          </Reveal>
+          <Reveal variant="up" delay={80}>
+            <ul className="event-detail__meta">
             <li>
               <strong>{t("EVENT_META_WHEN")}</strong>
               <span>{formatDate(event.EventDate)}</span>
@@ -199,7 +201,8 @@ export function EventDetailPage() {
               <strong>{t("EVENT_META_ORGANIZER")}</strong>
               <span>{event.CreatedByName || t("EVENT_META_ORGANIZER_DEFAULT")}</span>
             </li>
-          </ul>
+            </ul>
+          </Reveal>
           {event.Description ? (
             <div className="event-detail__about">
               <h2>{t("EVENT_ABOUT_THIS")}</h2>
@@ -219,13 +222,15 @@ export function EventDetailPage() {
           ) : null}
         </div>
 
-        <aside className="event-detail__aside">
-          <div className="ticket-card">
+        <Reveal variant="right" delay={120}>
+          <aside className="event-detail__aside">
+            <div className="ticket-card">
             <h2 className="ticket-card__title">{t("EVENT_TICKET_TITLE")}</h2>
             {ticketTypesQuery.isPending ? (
-              <div className="events__state">
-                <div className="spinner spinner--inline" aria-hidden="true" />
-                <span>{t("EVENT_LOADING_TICKETS")}</span>
+              <div className="ticket-card__list" aria-busy="true">
+                {Array.from({ length: 3 }, (_, i) => (
+                  <Skeleton key={i} className="skeleton--ticket-option" />
+                ))}
               </div>
             ) : ticketTypes.length === 0 ? (
               <p className="ticket-card__empty">{t("EVENT_TICKETS_EMPTY")}</p>
@@ -336,8 +341,9 @@ export function EventDetailPage() {
               </Link>
             )}
             <p className="ticket-card__fine">{t("EVENT_FINEPRINT")}</p>
-          </div>
-        </aside>
+            </div>
+          </aside>
+        </Reveal>
       </div>
     </section>
   );

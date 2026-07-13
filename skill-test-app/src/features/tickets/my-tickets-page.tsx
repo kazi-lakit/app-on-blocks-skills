@@ -3,7 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { gql, type GqlResult } from "../data/gateway";
 import { useCurrentUser } from "../auth/use-session";
 import type { Purchase } from "./api";
+import { TicketListSkeleton } from "../../components/skeleton";
 import { useT, useTn } from "../i18n";
+import { Reveal } from "../../components/reveal";
 
 const PURCHASE_FIELDS =
   "ItemId EventId EventName TicketTypeId TicketTypeName UserId UserName Quantity TotalPrice Status";
@@ -43,12 +45,14 @@ export function MyTicketsPage() {
 
   return (
     <section className="my-tickets">
-      <header className="events__header">
-        <div>
-          <h1 className="events__title">{t("TICKETS_TITLE")}</h1>
-          <p className="events__lede">{t("TICKETS_LEDE")}</p>
-        </div>
-      </header>
+      <Reveal variant="up">
+        <header className="events__header">
+          <div>
+            <h1 className="events__title">{t("TICKETS_TITLE")}</h1>
+            <p className="events__lede">{t("TICKETS_LEDE")}</p>
+          </div>
+        </header>
+      </Reveal>
 
       {justBought ? (
         <div className="alert alert--info">
@@ -57,23 +61,26 @@ export function MyTicketsPage() {
       ) : null}
 
       {purchasesQuery.isPending ? (
-        <div className="events__state">
-          <div className="spinner spinner--inline" aria-hidden="true" />
-          <span>{t("TICKETS_LOADING")}</span>
-        </div>
+        <TicketListSkeleton count={4} />
       ) : items.length === 0 ? (
-        <div className="events__empty">
-          <h2>{t("TICKETS_EMPTY_TITLE")}</h2>
-          <p>
-            {t("TICKETS_EMPTY_DESC_PRE")}{" "}
-            <Link to="/events">{t("NAV_EVENTS")}</Link>{" "}
-            {t("TICKETS_EMPTY_DESC_POST")}
-          </p>
-        </div>
+        <Reveal variant="up">
+          <div className="events__empty">
+            <h2>{t("TICKETS_EMPTY_TITLE")}</h2>
+            <p>
+              {t("TICKETS_EMPTY_DESC_PRE")}{" "}
+              <Link to="/events">{t("NAV_EVENTS")}</Link>{" "}
+              {t("TICKETS_EMPTY_DESC_POST")}
+            </p>
+          </div>
+        </Reveal>
       ) : (
-        <ul className="ticket-list">
-          {items.map((p) => (
-            <li key={p.ItemId} className="ticket-row">
+        <ul className="ticket-list reveal--stagger is-visible">
+          {items.map((p, i) => (
+            <li
+              key={p.ItemId}
+              className="ticket-row"
+              style={{ ["--stagger-index" as string]: i % 6 }}
+            >
               <div className="ticket-row__left">
                 <span className="tag">{p.TicketTypeName}</span>
                 <h3>{p.EventName}</h3>

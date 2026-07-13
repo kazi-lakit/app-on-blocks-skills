@@ -8,7 +8,9 @@ import { CATEGORIES, CATEGORY_KEYS } from "./constants";
 import type { Event } from "./api";
 import type { TicketType } from "./ticket-types";
 import { ImageUploadField } from "../files/image-upload-field";
+import { FormSkeleton } from "../../components/skeleton";
 import { useT } from "../i18n";
+import { Reveal } from "../../components/reveal";
 
 interface TicketTypeDraft {
   id: string;
@@ -116,12 +118,7 @@ export function UpdateEventPage() {
   }
 
   if (eventQuery.isPending || ticketTypesQuery.isPending) {
-    return (
-      <div className="events__state">
-        <div className="spinner spinner--inline" aria-hidden="true" />
-        <span>{t("EVENT_LOADING")}</span>
-      </div>
-    );
+    return <FormSkeleton />;
   }
 
   if (eventQuery.error || !eventQuery.data) {
@@ -278,12 +275,14 @@ export function UpdateEventPage() {
 
   return (
     <section className="create-event">
-      <header className="events__header">
-        <div>
-          <h1 className="events__title">{t("FORM_TITLE_EDIT")}</h1>
-          <p className="events__lede">{t("FORM_LEDE_EDIT")}</p>
-        </div>
-      </header>
+      <Reveal variant="up">
+        <header className="events__header">
+          <div>
+            <h1 className="events__title">{t("FORM_TITLE_EDIT")}</h1>
+            <p className="events__lede">{t("FORM_LEDE_EDIT")}</p>
+          </div>
+        </header>
+      </Reveal>
 
       <form className="form create-event__form" onSubmit={onSubmit}>
         {error ? <div className="alert alert--error">{error}</div> : null}
